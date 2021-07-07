@@ -16,7 +16,9 @@ public class FluidSimuation extends ApplicationAdapter {
 	@Override
 	public void create () {
 		shapeRenderer = new ShapeRenderer();
-		e = new Environment(200, 100);
+		e = new Environment(400, 400);
+		//e.initUniform(1, 100, 0);
+		//e.setPoint(50, 50, 1, 50, 0);
 		e.initRandom();
 		cellSize = 2;
 	}
@@ -25,8 +27,8 @@ public class FluidSimuation extends ApplicationAdapter {
 	public void render () {
 		ScreenUtils.clear(0, 0, 0, 1);
 		shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
-		renderVelocityX();
-		e.step(1, 10);
+		renderPressure();
+		e.step(0.03, 10);
 		shapeRenderer.end();
 	}
 	
@@ -40,7 +42,7 @@ public class FluidSimuation extends ApplicationAdapter {
 				Cell c = e.getCell(i, j);
 				if (c instanceof AirCell) {
 					AirCell ac = (AirCell) c;
-					double pressure = ac.getPressure();
+					double pressure = ac.getPressure() / 10;
 					Color color = new Color((float) pressure, 0, 0 ,1);
 					shapeRenderer.setColor(color);
 					shapeRenderer.rect(i * cellSize, j * cellSize, cellSize, cellSize);
