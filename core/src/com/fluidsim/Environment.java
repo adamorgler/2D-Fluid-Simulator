@@ -109,6 +109,7 @@ public class Environment {
         double[][] pressureField = pressure(divergence, accuracy);
         finalCalculation(advectionField, pressureField, time);
         addForces(time);
+        vorticityConfinement(time);
     }
 
     private AirCell[][] advection(double time) {
@@ -202,8 +203,6 @@ public class Environment {
                     ac.setVelocityY(velocityY);
                     ac.setPressure(cellPressure);
                     cells[i][j] = ac;
-
-                    vorticityConfinementX(i, j, time);
                 }
             }
         }
@@ -219,7 +218,10 @@ public class Environment {
                     double velocityY = ac.getVelocityY();
                     double pressure = ac.getPressure();
 
-                    //velocityY += forceOfGravity(time);
+//                    velocityY += forceOfGravity(time);
+                    if (i >= 0 && i < 2 && j > (height / 4) && j < (3 * height / 4)) {
+                        velocityX += 10 * time;
+                    }
 
                     ac.setVelocityX(velocityX);
                     ac.setVelocityY(velocityY);
@@ -263,22 +265,33 @@ public class Environment {
         return -(airmass * g) * time;
     }
 
-    private void vorticityConfinementX(int x, int y, double time) {
-
-        if (checkXBounds(x) && checkYBounds(y) && cells[x][y] instanceof AirCell) {
-            AirCell ac = (AirCell) cells[x][y];
-            double dx = (Math.abs(curl(x + 1, y)) - Math.abs(curl(x - 1, y)));
-            double dy = (Math.abs(curl(x, y + 1)) - Math.abs(curl(x, y - 1)));
-            double len = Math.sqrt((dx * dx) + (dy * dy));
-            if (len > 0.1) {
-                dx = vorticity / (len * dx);
-                dy = vorticity / (len * dy);
-                double velocityX = ac.getVelocityX();
-                double velocityY = ac.getVelocityY();
-                velocityX += time * curl(x, y) * dx;
-                velocityY += time * curl(x, y) * dy;
-                ac.setVelocityX(velocityX);
-                ac.setVelocityY(velocityY);
+    private void vorticityConfinement(double time) {
+        double[][][] temp = new double[2][width][height];
+        for (int i = 0; i < width; i++) {
+            for (int j = 0; j < height; j++) {
+                if (checkXBounds(i) && checkYBounds(j) && cells[i][j] instanceof AirCell) {
+                    AirCell ac = (AirCell) cells[i][j];
+                    double dx = Math.abs(curl(i, j - 1)) - Math.abs(curl(i, j + 1));
+                    double dy = Math.abs(curl(i + 1, j)) - Math.abs(curl(i - 1, j));
+                    double len = Math.sqrt((dx * dx) + (dy * dy)) + 0.00001;
+                    dx = vorticity / len * dx;
+                    dy = vorticity / len * dy;
+                    double velocityX = ac.getVelocityX();
+                    double velocityY = ac.getVelocityY();
+                    velocityX += time * curl(i, j) * dx;
+                    velocityY += time * curl(i, j) * dy;
+                    temp[0][i][j] = velocityX;
+                    temp[1][i][j] = velocityY;
+                }
+            }
+        }
+        for (int i = 0; i < width; i++) {
+            for (int j = 0; j < height; j++) {
+                if (checkXBounds(i) && checkYBounds(j) && cells[i][j] instanceof AirCell) {
+                    AirCell ac = (AirCell) cells[i][j];
+                    ac.setVelocityX(temp[0][i][j]);
+                    ac.setVelocityY(temp[1][i][j]);
+                }
             }
         }
 
@@ -436,9 +449,9 @@ public class Environment {
     }
 
     private boolean checkXBounds(int xPos) {
-        return (xPos > 0 && xPos < width);
+        return (xPos >= 0 && xPos < width);
     }
     private boolean checkYBounds(int yPos) {
-        return (yPos > 0 && yPos < height);
+        return (yPos >= 0 && yPos < height);
     }
 }

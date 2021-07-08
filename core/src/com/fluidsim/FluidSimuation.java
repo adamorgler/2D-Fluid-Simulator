@@ -16,11 +16,10 @@ public class FluidSimuation extends ApplicationAdapter {
 	@Override
 	public void create () {
 		shapeRenderer = new ShapeRenderer();
-		e = new Environment(400, 400);
-		//e.initUniform(1, 100, 0);
-		//e.setPoint(50, 50, 1, 50, 0);
+		e = new Environment(200, 200);
+		//e.initUniform(0, 30, 0);
 		e.initRandom();
-		cellSize = 2;
+		cellSize = 4;
 	}
 
 	@Override
@@ -43,7 +42,12 @@ public class FluidSimuation extends ApplicationAdapter {
 				if (c instanceof AirCell) {
 					AirCell ac = (AirCell) c;
 					double pressure = ac.getPressure() / 10;
-					Color color = new Color((float) pressure, 0, 0 ,1);
+					Color color;
+					if (pressure > 0) {
+						color = new Color((float) pressure, 0, 0 ,1);
+					} else {
+						color = new Color(0, 0, Math.abs((float) pressure),1);
+					}
 					shapeRenderer.setColor(color);
 					shapeRenderer.rect(i * cellSize, j * cellSize, cellSize, cellSize);
 				}
@@ -56,12 +60,32 @@ public class FluidSimuation extends ApplicationAdapter {
 				Cell c = e.getCell(i, j);
 				if (c instanceof AirCell) {
 					AirCell ac = (AirCell) c;
-					double velocityX = ac.getVelocityX() / 100;
+					double velocityX = ac.getVelocityX() / 10;
 					Color color;
 					if (velocityX > 0) {
 						color = new Color((float) velocityX, 0, 0 ,1);
 					} else {
-						color = new Color(0, 0, (float) velocityX,1);
+						color = new Color(0, 0, Math.abs((float) velocityX),1);
+					}
+					shapeRenderer.setColor(color);
+					shapeRenderer.rect(i * cellSize, j * cellSize, cellSize, cellSize);
+				}
+			}
+		}
+	}
+
+	private void renderVelocityY() {
+		for(int i = 0; i < e.getWidth(); i++) {
+			for (int j = 0; j < e.getHeight(); j++) {
+				Cell c = e.getCell(i, j);
+				if (c instanceof AirCell) {
+					AirCell ac = (AirCell) c;
+					double velocityY = ac.getVelocityY() / 10;
+					Color color;
+					if (velocityY > 0) {
+						color = new Color((float) velocityY, 0, 0 ,1);
+					} else {
+						color = new Color(0, 0, Math.abs((float) velocityY),1);
 					}
 					shapeRenderer.setColor(color);
 					shapeRenderer.rect(i * cellSize, j * cellSize, cellSize, cellSize);
