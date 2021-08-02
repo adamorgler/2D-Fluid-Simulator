@@ -27,7 +27,7 @@ public class Environment {
     public Environment(int width, int height) {
         this.width = width;
         this.height = height;
-        this.cells = new AirCell[width][height];
+        this.cells = new Cell[width][height];
         this.cellSize = 1;
         this.density = 1;
         this.g = 9.81;
@@ -56,6 +56,17 @@ public class Environment {
                 ac.setVelocityY((rand.nextDouble() * 200) - 100);
                 ac.setVelocityX((rand.nextDouble() * 200) - 100);
                 cells[i][j] = ac;
+            }
+        }
+    }
+
+    public void initCentralWall(int width, int height) {
+        int x = (this.width / 2) - (width / 2);
+        int y = (this.height / 2) - (height / 2);
+        for(int i = x; i < x + width; i++) {
+            for(int j = y; j < y + height; j++) {
+                WallCell wc = new WallCell(i, j);
+                cells[i][j] = wc;
             }
         }
     }
@@ -219,8 +230,8 @@ public class Environment {
                     double pressure = ac.getPressure();
 
 //                    velocityY += forceOfGravity(time);
-                    if (i >= 0 && i < 2 && j > (height / 4) && j < (3 * height / 4)) {
-                        velocityX += 10 * time;
+                    if (i >= 0 && i < 2 && j > (4 * height / 10) && j < (6 * height / 10)) {
+                        velocityX += 100 * time;
                     }
 
                     ac.setVelocityX(velocityX);
