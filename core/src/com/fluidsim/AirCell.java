@@ -8,6 +8,8 @@ public class AirCell extends Cell {
 
     private double pressure;
 
+    private double temperature;
+
     public AirCell(int xPos, int yPos) {
         super(xPos, yPos);
     }
@@ -34,5 +36,13 @@ public class AirCell extends Cell {
 
     public void setPressure(double pressure) {
         this.pressure = pressure;
+    }
+
+    public double getTemperature() {
+        return temperature;
+    }
+
+    public void setTemperature(double temperature) {
+        this.temperature = temperature;
     }
 }

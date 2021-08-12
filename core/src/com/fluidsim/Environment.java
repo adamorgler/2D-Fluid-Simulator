@@ -5,6 +5,8 @@ import java.util.Random;
 public class Environment {
     private Cell[][] cells;
 
+    private AirCell skyCell;
+
     private int width;
 
     private int height;
@@ -33,6 +35,7 @@ public class Environment {
         this.g = 9.81;
         this.airmass = 1.293;
         this.vorticity = 0.0001;
+        setSkyCells();
     }
 
     public void initUniform(double pressure, double velocityX, double velocityY) {
@@ -68,6 +71,15 @@ public class Environment {
                 WallCell wc = new WallCell(i, j);
                 cells[i][j] = wc;
             }
+        }
+    }
+
+    public void initFloor() {
+        for(int i = 0; i < width; i++) {
+            WallCell wc1 = new WallCell(i, 0);
+            WallCell wc2 = new WallCell(i, 1);
+            cells[i][0] = wc1;
+            cells[i][1] = wc2;
         }
     }
 
@@ -123,6 +135,13 @@ public class Environment {
         vorticityConfinement(time);
     }
 
+    private void setSkyCells() {
+        skyCell = new AirCell(width, height);
+        skyCell.setVelocityX(0);
+        skyCell.setVelocityY(0);
+        skyCell.setPressure(1);
+    }
+
     private AirCell[][] advection(double time) {
         AirCell[][] output = new AirCell[width][height];
         for (int i = 0; i < width; i++) {
@@ -149,10 +168,10 @@ public class Environment {
         double[][] output = new double[width][height];
         for (int i = 0; i < width; i++) {
             for (int j = 0; j < height; j++) {
-                Cell top = advectionField[wrapXBounds(i)][wrapYBounds(j + 1)];
-                Cell bottom = advectionField[wrapXBounds(i)][wrapYBounds(j - 1)];
-                Cell left = advectionField[wrapXBounds(i - 1)][wrapYBounds(j)];
-                Cell right = advectionField[wrapXBounds(i + 1)][wrapYBounds(j)];
+                Cell top = getCell(advectionField, i, j + 1);
+                Cell bottom = getCell(advectionField, i, j - 1);
+                Cell left = getCell(advectionField, i - 1, j);
+                Cell right = getCell(advectionField, i + 1, j);
                 double next = 0;
                 if (top instanceof AirCell) {
                     next += ((AirCell) top).getVelocityY();
@@ -183,10 +202,10 @@ public class Environment {
                         temp[i][j] = 0;
                     } else {
                         temp[i][j] = (divergance[i][j]
-                                + output[wrapXBounds(i + 2)][wrapYBounds(j)]
-                                + output[wrapXBounds(i - 2)][wrapYBounds(j)]
-                                + output[wrapXBounds(i)][wrapYBounds(j + 2)]
-                                + output[wrapXBounds(i)][wrapYBounds(j - 2)]) / 4;
+                                + getCellData(output, i + 2, j)
+                                + getCellData(output, i - 2, j)
+                                + getCellData(output, i, j + 2)
+                                + getCellData(output, i, j - 2)) / 4;
                     }
                 }
             }
@@ -194,6 +213,8 @@ public class Environment {
         }
         return output;
     }
+
+
 
     private void finalCalculation(AirCell[][] advection, double[][] pressureField, double time) {
         for (int i = 0; i < width; i++) {
@@ -203,12 +224,12 @@ public class Environment {
                     AirCell ac = (AirCell) c;
                     double velocityX = advection[i][j].getVelocityX()
                             - ((time / (2 * density * cellSize))
-                            * (pressureField[wrapXBounds(i + 1)][j]
-                            - pressureField[wrapXBounds(i - 1)][j]));
+                            * (getCellData(pressureField, i + 1, j)
+                            - getCellData(pressureField, i - 1, j)));
                     double velocityY = advection[i][j].getVelocityY()
                             - ((time / (2 * density * cellSize))
-                            * (pressureField[i][wrapYBounds(j + 1)]
-                            - pressureField[i][wrapYBounds(j - 1)]));
+                            * (getCellData(pressureField, i, j + 1)
+                            - getCellData(pressureField, i, j - 1)));
                     double cellPressure = pressureField[i][j];
                     ac.setVelocityX(velocityX);
                     ac.setVelocityY(velocityY);
@@ -229,8 +250,8 @@ public class Environment {
                     double velocityY = ac.getVelocityY();
                     double pressure = ac.getPressure();
 
-//                    velocityY += forceOfGravity(time);
-                    if (i >= 0 && i < 2 && j > (4 * height / 10) && j < (6 * height / 10)) {
+                    //velocityY += forceOfGravity(time);
+                    if (i >= 10 && i < 11 && j > (4 * height / 10) && j < (6 * height / 10)) {
                         velocityX += 100 * time;
                     }
 
@@ -240,6 +261,26 @@ public class Environment {
                 }
             }
         }
+    }
+
+    private Cell getCell(Cell[][] cells, int xPos, int yPos) {
+        xPos = wrapXBounds(xPos);
+        if (yPos >= height) {
+            return skyCell;
+        } else if (yPos < 0){
+            return cells[xPos][0];
+        }
+        return cells[xPos][yPos];
+    }
+
+    private double getCellData(double[][] data, int xPos, int yPos) {
+        xPos = wrapXBounds(xPos);
+        if (yPos >= height) {
+            yPos = height - 1;
+        } else if (yPos < 0) {
+            yPos = 0;
+        }
+        return data[xPos][yPos];
     }
 
     private double curl(int x, int y) {
@@ -305,72 +346,38 @@ public class Environment {
                 }
             }
         }
-
     }
-
-//    private double bilinearInterpolatePressure(double x, double y) {
-//        double output = 0;
-//        x = checkXBoundsDouble(x);
-//        y = checkYBoundsDouble(y);
-//        int x1 = checkXBounds((int) Math.floor(x));
-//        int x2 = checkXBounds((int) Math.ceil(x));
-//        int y1 = checkYBounds((int) Math.floor(y));
-//        int y2 = checkYBounds((int) Math.ceil(y));
-//        double p11 = 0;
-//        double p12 = 0;
-//        double p21 = 0;
-//        double p22 = 0;
-//        Cell c;
-//        c = cells[x1][y1];
-//        if (c instanceof AirCell) {
-//            p11 = ((AirCell) c).getPressure();
-//        }
-//        c = cells[x1][y2];
-//        if (c instanceof AirCell) {
-//            p12 = ((AirCell) c).getPressure();
-//        }
-//        c = cells[x2][y1];
-//        if (c instanceof AirCell) {
-//            p21 = ((AirCell) c).getPressure();
-//        }
-//        c = cells[x2][y2];
-//        if (c instanceof AirCell) {
-//            p22 = ((AirCell) c).getPressure();
-//        }
-//        // https://en.wikipedia.org/wiki/Bilinear_interpolation
-//        double xy1 = (((x2 - x) / (x2 - x1)) * p11) + (((x - x1) / (x2 - x1)) * p21);
-//        double xy2 = (((x2 - x) / (x2 - x1)) * p12) + (((x - x1) / (x2 - x1)) * p22);
-//        output = (((y2 - y) / (y2 - y1)) * xy1) + (((y - y1) / (y2 - y1)) * xy2);
-//
-//        return output;
-//    }
 
     private double bilinearInterpolateVelocityX(double x, double y) {
         double output = 0;
         x = wrapXBoundsDouble(x);
         y = wrapYBoundsDouble(y);
-        int x1 = wrapXBounds((int) Math.floor(x));
-        int x2 = wrapXBounds((int) Math.ceil(x));
-        int y1 = wrapYBounds((int) Math.floor(y));
-        int y2 = wrapYBounds((int) Math.ceil(y));
+        int x1 = (int) Math.floor(x);
+        int x2 = (int) Math.ceil(x);
+        int y1 = (int) Math.floor(y);
+        int y2 = (int) Math.ceil(y);
+        int x1pos = wrapXBounds(x1);;
+        int x2pos = wrapXBounds(x2);;
+        int y1pos = wrapYBounds(y1);;
+        int y2pos = wrapYBounds(y2);;
         double v11 = 0;
         double v12 = 0;
         double v21 = 0;
         double v22 = 0;
         Cell c;
-        c = cells[x1][y1];
+        c = cells[x1pos][y1pos];
         if (c instanceof AirCell) {
             v11 = ((AirCell) c).getVelocityX();
         }
-        c = cells[x1][y2];
+        c = cells[x1pos][y2pos];
         if (c instanceof AirCell) {
             v12 = ((AirCell) c).getVelocityX();
         }
-        c = cells[x2][y1];
+        c = cells[x2pos][y1pos];
         if (c instanceof AirCell) {
             v21 = ((AirCell) c).getVelocityX();
         }
-        c = cells[x2][y2];
+        c = cells[x2pos][y2pos];
         if (c instanceof AirCell) {
             v22 = ((AirCell) c).getVelocityX();
         }
@@ -385,28 +392,32 @@ public class Environment {
         double output = 0;
         x = wrapXBoundsDouble(x);
         y = wrapYBoundsDouble(y);
-        int x1 = wrapXBounds((int) Math.floor(x));
-        int x2 = wrapXBounds((int) Math.ceil(x));
-        int y1 = wrapYBounds((int) Math.floor(y));
-        int y2 = wrapYBounds((int) Math.ceil(y));
+        int x1 = (int) Math.floor(x);
+        int x2 = (int) Math.ceil(x);
+        int y1 = (int) Math.floor(y);
+        int y2 = (int) Math.ceil(y);
+        int x1pos = wrapXBounds(x1);;
+        int x2pos = wrapXBounds(x2);;
+        int y1pos = wrapYBounds(y1);;
+        int y2pos = wrapYBounds(y2);;
         double v11 = 0;
         double v12 = 0;
         double v21 = 0;
         double v22 = 0;
         Cell c;
-        c = cells[x1][y1];
+        c = cells[x1pos][y1pos];
         if (c instanceof AirCell) {
             v11 = ((AirCell) c).getVelocityY();
         }
-        c = cells[x1][y2];
+        c = cells[x1pos][y2pos];
         if (c instanceof AirCell) {
             v12 = ((AirCell) c).getVelocityY();
         }
-        c = cells[x2][y1];
+        c = cells[x2pos][y1pos];
         if (c instanceof AirCell) {
             v21 = ((AirCell) c).getVelocityY();
         }
-        c = cells[x2][y2];
+        c = cells[x2pos][y2pos];
         if (c instanceof AirCell) {
             v22 = ((AirCell) c).getVelocityY();
         }

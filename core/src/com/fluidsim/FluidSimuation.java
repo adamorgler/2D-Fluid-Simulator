@@ -27,7 +27,8 @@ public class FluidSimuation extends ApplicationAdapter {
 		e = new Environment(200, 200);
 		//e.initUniform(0, 30, 0);
 		e.initRandom();
-		e.initCentralWall(20,20);
+		e.initFloor();
+		e.initCentralWall(20, 20);
 
 		cellSize = 4;
 		displayMode = 2;
