@@ -26,6 +26,18 @@ public class Environment {
     //vorticity of air
     private double vorticity;
 
+    private double maxVelocityX;
+
+    private double minVelocityX;
+
+    private double maxVelocityY;
+
+    private double minVelocityY;
+
+    private double maxPressure;
+
+    private double minPressure;
+
     public Environment(int width, int height) {
         this.width = width;
         this.height = height;
@@ -121,18 +133,52 @@ public class Environment {
         return cells[xPos][yPos];
     }
 
+    public double getMaxVelocityX() {
+        return maxVelocityX;
+    }
+
+    public double getMinVelocityX() {
+        return minVelocityX;
+    }
+
+    public double getMaxVelocityY() {
+        return maxVelocityY;
+    }
+
+    public double getMinVelocityY() {
+        return minVelocityY;
+    }
+
+    public double getMaxPressure() {
+        return maxPressure;
+    }
+
+    public double getMinPressure() {
+        return minPressure;
+    }
+
     /**
      * Step on iteration of the sim
      * @param time time elapsed in seconds
      * @param accuracy accuracy of pressure gradient, recommend k = 10
      */
     public void step(double time, int accuracy) {
+        resetMinMax();
         AirCell[][] advectionField = advection(time);
         double[][] divergence = divergence(advectionField, time);
         double[][] pressureField = pressure(divergence, accuracy);
         finalCalculation(advectionField, pressureField, time);
         addForces(time);
         vorticityConfinement(time);
+    }
+
+    private void resetMinMax() {
+        this.minPressure = Double.MAX_VALUE;
+        this.minVelocityX = Double.MAX_VALUE;
+        this.minVelocityX = Double.MAX_VALUE;
+        this.maxPressure = Double.MIN_VALUE;
+        this.maxVelocityX = Double.MIN_VALUE;
+        this.maxVelocityY = Double.MIN_VALUE;
     }
 
     private void setSkyCells() {
@@ -258,8 +304,35 @@ public class Environment {
                     ac.setVelocityX(velocityX);
                     ac.setVelocityY(velocityY);
                     ac.setPressure(pressure);
+
+                    checkCellMinMax(ac);
                 }
             }
+        }
+    }
+
+    private void checkCellMinMax(AirCell ac) {
+        double velocityX = ac.getVelocityX();
+        double velocityY = ac.getVelocityY();
+        double pressure = ac.getPressure();
+
+        if (minVelocityX > velocityX) {
+            minVelocityX = velocityX;
+        }
+        if (minVelocityY > velocityY) {
+            minVelocityY = velocityY;
+        }
+        if (minPressure > pressure) {
+            minPressure = pressure;
+        }
+        if (maxVelocityX < velocityX) {
+            maxVelocityX = velocityX;
+        }
+        if (maxVelocityY < velocityY) {
+            maxVelocityY = velocityY;
+        }
+        if (maxPressure < pressure) {
+            maxPressure = pressure;
         }
     }
 
