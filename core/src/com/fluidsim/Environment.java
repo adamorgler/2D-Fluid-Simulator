@@ -50,6 +50,7 @@ public class Environment {
         setSkyCells();
     }
 
+    // init simulation with uniform pressure and velocity field
     public void initUniform(double pressure, double velocityX, double velocityY) {
         for(int i = 0; i < width; i++) {
             for (int j = 0; j < height; j++) {
