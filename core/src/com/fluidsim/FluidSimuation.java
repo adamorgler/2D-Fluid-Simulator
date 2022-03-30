@@ -21,7 +21,7 @@ public class FluidSimuation extends ApplicationAdapter {
 		//e.initUniform(0, 30, 0);
 		e.initRandom();
 		e.initFloor();
-		e.initCentralWall(20, 20);
+		//e.initCentralWall(20, 20);
 
 		gui = new GUIController(e);
 	}

@@ -4,38 +4,24 @@ import java.util.Random;
 
 public class Environment {
     private Cell[][] cells;
-
     private AirCell skyCell;
-
     private int width;
-
     private int height;
-
     // cell size in meters
     private double cellSize;
-
     // air density in atm. 1 atm at sea level
     private double density;
-
     //acceleration due ot gravity
     private double g;
-
     //mass of air in kg
     private double airmass;
-
     //vorticity of air
     private double vorticity;
-
     private double maxVelocityX;
-
     private double minVelocityX;
-
     private double maxVelocityY;
-
     private double minVelocityY;
-
     private double maxPressure;
-
     private double minPressure;
 
     public Environment(int width, int height) {
@@ -298,8 +284,11 @@ public class Environment {
                     double pressure = ac.getPressure();
 
                     //velocityY += forceOfGravity(time);
-                    if (i >= 10 && i < 11 && j > (4 * height / 10) && j < (6 * height / 10)) {
+                    if (i >= 10 && i < 11 && j > (5 * height / 10) && j < (6 * height / 10)) {
                         velocityX += 100 * time;
+                    }
+                    if (i >= 10 && i < 11 && j > (4 * height / 10) && j < (5 * height / 10)) {
+                        velocityX += 75 * time;
                     }
 
                     ac.setVelocityX(velocityX);

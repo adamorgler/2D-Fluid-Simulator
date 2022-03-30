@@ -4,6 +4,7 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
+import com.badlogic.gdx.scenes.scene2d.ui.Button;
 import com.badlogic.gdx.utils.ScreenUtils;
 
 public class GUIController {
@@ -12,12 +13,14 @@ public class GUIController {
 
     private ShapeRenderer shapeRenderer;
 
-    int cellSize;
+    private Button buttons[];
+
+    private int cellSize;
 
     // 1 - pressure
     // 2 - velocity X
     // 3 - velocity Y
-    int displayMode;
+    private int displayMode;
 
     public GUIController(Environment env) {
         this.shapeRenderer = new ShapeRenderer();
@@ -33,6 +36,10 @@ public class GUIController {
         shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
         renderCells();
         shapeRenderer.end();
+    }
+
+    private void initButtons() {
+        this.buttons = new Button[2];
     }
 
     // checks for user inputs
